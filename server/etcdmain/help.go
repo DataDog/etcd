@@ -160,6 +160,8 @@ Security:
     Path to the client certificate revocation list file.
   --client-cert-allowed-hostname ''
     Comma-separated list of SAN hostnames for client cert authentication.
+  --client-cert-allowed-uri ''
+    Comma-separated list of allowed SAN URIs for client cert authentication.
   --trusted-ca-file ''
     Path to the client server TLS trusted CA cert file.
   --auto-tls 'false'
@@ -176,6 +178,8 @@ Security:
     Comma-separated list of allowed CNs for inter-peer TLS authentication.
   --peer-cert-allowed-hostname ''
     Comma-separated list of allowed SAN hostnames for inter-peer TLS authentication.
+  --peer-cert-allowed-uri ''
+    Comma-separated list of allowed SAN URIs for inter-peer TLS authentication.
   --peer-auto-tls 'false'
     Peer TLS using self-generated certificates if --peer-key-file and --peer-cert-file are not provided.
   --peer-client-cert-file ''
@@ -223,7 +227,7 @@ Logging:
   --enable-log-rotation 'false'
     Enable log rotation of a single log-outputs file target.
   --log-rotation-config-json '{"maxsize": 100, "maxage": 0, "maxbackups": 0, "localtime": false, "compress": false}'
-    Configures log rotation if enabled with a JSON logger config. MaxSize(MB), MaxAge(days,0=no limit), MaxBackups(0=no limit), LocalTime(use computers local time), Compress(gzip)". 
+    Configures log rotation if enabled with a JSON logger config. MaxSize(MB), MaxAge(days,0=no limit), MaxBackups(0=no limit), LocalTime(use computers local time), Compress(gzip)".
 
 Experimental distributed tracing:
   --experimental-enable-distributed-tracing 'false'
