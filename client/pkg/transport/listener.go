@@ -197,6 +197,10 @@ type TLSInfo struct {
 	// TLS certificate provided by a client.
 	AllowedHostnames []string
 
+	// AllowedURIs is a list of acceptable subjective alternative name URIs that must match the
+	// TLS certificate provided by a client.
+	AllowedURIs []string
+
 	// Logger logs TLS errors.
 	// If nil, all logs are discarded.
 	Logger *zap.Logger
@@ -407,22 +411,19 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		cfg.CipherSuites = info.CipherSuites
 	}
 
+	var definedRestrictions int
+	for _, restriction := range []int{len(info.AllowedCN), len(info.AllowedCNs), len(info.AllowedHostname), len(info.AllowedHostnames), len(info.AllowedURIs)} {
+		if restriction > 0 {
+			definedRestrictions++
+			if definedRestrictions > 1 {
+				return nil, errors.New("exactly one of AllowedCNs, AllowedHostnames, or AllowedURIs can be defined")
+			}
+		}
+	}
+
 	// Client certificates may be verified by either an exact match on the CN,
 	// or a more general check of the CN and SANs.
 	var verifyCertificate func(*x509.Certificate) bool
-
-	if info.AllowedCN != "" && len(info.AllowedCNs) > 0 {
-		return nil, fmt.Errorf("AllowedCN and AllowedCNs are mutually exclusive (cn=%q, cns=%q)", info.AllowedCN, info.AllowedCNs)
-	}
-	if info.AllowedHostname != "" && len(info.AllowedHostnames) > 0 {
-		return nil, fmt.Errorf("AllowedHostname and AllowedHostnames are mutually exclusive (hostname=%q, hostnames=%q)", info.AllowedHostname, info.AllowedHostnames)
-	}
-	if info.AllowedCN != "" && info.AllowedHostname != "" {
-		return nil, fmt.Errorf("AllowedCN and AllowedHostname are mutually exclusive (cn=%q, hostname=%q)", info.AllowedCN, info.AllowedHostname)
-	}
-	if len(info.AllowedCNs) > 0 && len(info.AllowedHostnames) > 0 {
-		return nil, fmt.Errorf("AllowedCNs and AllowedHostnames are mutually exclusive (cns=%q, hostnames=%q)", info.AllowedCNs, info.AllowedHostnames)
-	}
 
 	if info.AllowedCN != "" {
 		info.Logger.Warn("AllowedCN is deprecated, use AllowedCNs instead")
@@ -436,6 +437,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 			return cert.VerifyHostname(info.AllowedHostname) == nil
 		}
 	}
+
 	if len(info.AllowedCNs) > 0 {
 		verifyCertificate = func(cert *x509.Certificate) bool {
 			for _, allowedCN := range info.AllowedCNs {
@@ -446,11 +448,24 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 			return false
 		}
 	}
+
 	if len(info.AllowedHostnames) > 0 {
 		verifyCertificate = func(cert *x509.Certificate) bool {
 			for _, allowedHostname := range info.AllowedHostnames {
 				if cert.VerifyHostname(allowedHostname) == nil {
 					return true
+				}
+			}
+			return false
+		}
+	}
+	if len(info.AllowedURIs) > 0 {
+		verifyCertificate = func(cert *x509.Certificate) bool {
+			for _, allowedURI := range info.AllowedURIs {
+				for _, uri := range cert.URIs {
+					if allowedURI == uri.String() {
+						return true
+					}
 				}
 			}
 			return false
