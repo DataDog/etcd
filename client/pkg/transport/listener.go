@@ -197,6 +197,10 @@ type TLSInfo struct {
 	// TLS certificate provided by a client.
 	AllowedHostnames []string
 
+	// AllowedURIs is a list of acceptable subjective alternative name URIs that must match the
+	// TLS certificate provided by a client.
+	AllowedURIs []string
+
 	// Logger logs TLS errors.
 	// If nil, all logs are discarded.
 	Logger *zap.Logger
@@ -444,6 +448,17 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 			return cert.VerifyHostname(info.AllowedHostname) == nil
 		}
 	}
+
+	var definedRestrictions int
+	for _, restriction := range []int{len(info.AllowedCNs), len(info.AllowedHostnames), len(info.AllowedURIs)} {
+		if restriction > 0 {
+			definedRestrictions++
+			if definedRestrictions > 1 {
+				return nil, errors.New("exactly one of AllowedCNs, AllowedHostnames, or AllowedURIs can be defined")
+			}
+		}
+	}
+
 	if len(info.AllowedCNs) > 0 {
 		verifyCertificate = func(cert *x509.Certificate) bool {
 			for _, allowedCN := range info.AllowedCNs {
@@ -454,11 +469,24 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 			return false
 		}
 	}
+
 	if len(info.AllowedHostnames) > 0 {
 		verifyCertificate = func(cert *x509.Certificate) bool {
 			for _, allowedHostname := range info.AllowedHostnames {
 				if cert.VerifyHostname(allowedHostname) == nil {
 					return true
+				}
+			}
+			return false
+		}
+	}
+	if len(info.AllowedURIs) > 0 {
+		verifyCertificate = func(cert *x509.Certificate) bool {
+			for _, allowedURI := range info.AllowedURIs {
+				for _, uri := range cert.URIs {
+					if allowedURI == uri.String() {
+						return true
+					}
 				}
 			}
 			return false
