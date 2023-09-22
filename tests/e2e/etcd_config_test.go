@@ -379,6 +379,85 @@ func TestEtcdPeerNameAuth(t *testing.T) {
 	}
 }
 
+// TestEtcdPeerURIAuth checks that the inter peer auth based on SAN URI validation is working correctly.
+func TestEtcdPeerURIAuth(t *testing.T) {
+	skipInShortMode(t)
+
+	peers, tmpdirs := make([]string, 3), make([]string, 3)
+	for i := range peers {
+		peers[i] = fmt.Sprintf("e%d=https://127.0.0.1:%d", i, etcdProcessBasePort+i)
+		d, err := os.MkdirTemp("", fmt.Sprintf("e%d.etcd", i))
+		if err != nil {
+			t.Fatal(err)
+		}
+		tmpdirs[i] = d
+	}
+	ic := strings.Join(peers, ",")
+
+	procs := make([]*expect.ExpectProcess, len(peers))
+	defer func() {
+		for i := range procs {
+			if procs[i] != nil {
+				procs[i].Stop()
+			}
+			os.RemoveAll(tmpdirs[i])
+		}
+	}()
+
+	// node 0 and 1 have a cert with the correct certificate name, node 2 doesn't
+	for i := range procs {
+		commonArgs := []string{
+			binDir + "/etcd",
+			"--name", fmt.Sprintf("e%d", i),
+			"--listen-client-urls", "http://0.0.0.0:0",
+			"--data-dir", tmpdirs[i],
+			"--advertise-client-urls", "http://0.0.0.0:0",
+			"--listen-peer-urls", fmt.Sprintf("https://127.0.0.1:%d,https://127.0.0.1:%d", etcdProcessBasePort+i, etcdProcessBasePort+len(peers)+i),
+			"--initial-advertise-peer-urls", fmt.Sprintf("https://127.0.0.1:%d", etcdProcessBasePort+i),
+			"--initial-cluster", ic,
+		}
+
+		var args []string
+		if i <= 1 {
+			args = []string{
+				"--peer-cert-file", certPath4,
+				"--peer-key-file", privateKeyPath4,
+				"--peer-trusted-ca-file", caPath,
+				"--peer-client-cert-auth",
+				"--peer-cert-allowed-uri", "spiffe://example4.com/service",
+			}
+		} else {
+			args = []string{
+				"--peer-cert-file", certPath4,
+				"--peer-key-file", privateKeyPath4,
+				"--peer-trusted-ca-file", caPath,
+				"--peer-client-cert-auth",
+				"--peer-cert-allowed-uri", "spiffe://example.com/service",
+			}
+		}
+
+		commonArgs = append(commonArgs, args...)
+
+		p, err := spawnCmd(commonArgs, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		procs[i] = p
+	}
+
+	for i, p := range procs {
+		var expect []string
+		if i <= 1 {
+			expect = etcdServerReadyLines
+		} else {
+			expect = []string{"client certificate authentication failed"}
+		}
+		if err := waitReadyExpectProc(p, expect); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
 func TestGrpcproxyAndCommonName(t *testing.T) {
 	skipInShortMode(t)
 
@@ -498,5 +577,4 @@ func TestEtcdTLSVersion(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, waitReadyExpectProc(proc, etcdServerReadyLines), "did not receive expected output from etcd process")
 	assert.NoError(t, proc.Stop())
-
 }
