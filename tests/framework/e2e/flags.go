@@ -74,6 +74,6 @@ func InitFlags() {
 	CertPath3 = CertDir + "/server3.crt"
 	PrivateKeyPath3 = CertDir + "/server3.key.insecure"
 
-	CertPath3 = CertDir + "/server4.crt"
-	PrivateKeyPath3 = CertDir + "/server4.key.insecure"
+	CertPath4 = CertDir + "/server4.crt"
+	PrivateKeyPath4 = CertDir + "/server4.key.insecure"
 }
