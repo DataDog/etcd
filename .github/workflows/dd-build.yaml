@@ -40,7 +40,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: etcd_output_${{ env.SANITIZED_TARGET_PLATFORM }}
-        path: _output/release-tars
+        path: release/etcd-${{ env.RELEASE_VERSION }}-${{ env.SANITIZED_TARGET_PLATFORM }}.tar.gz
       env:
         SANITIZED_TARGET_PLATFORM: ${{ env.SANITIZED_TARGET_PLATFORM }}
   release:
