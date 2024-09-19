@@ -22,13 +22,13 @@ jobs:
       env:
         GITHUB_REF: ${{ github.ref }}
     - name: Build etcd
-      run: GOOS=linux REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
+      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
     - name: Calculate checksums
       id: calculate_checksums
       shell: bash
-      working-directory: /release
+      working-directory: release/
       env:
         ETCD_BUILD_PLATFORM: ${{ matrix.platform }}
       run: |
