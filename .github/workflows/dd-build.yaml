@@ -97,9 +97,6 @@ jobs:
     needs: release
     strategy:
       matrix:
-        assets: [
-          "etcd",
-        ]
         platform: ["linux-arm64","linux-amd64"]
         extension: ["tar.gz", "tar.gz.sha256sum"]
     steps:
@@ -118,6 +115,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: ./_output/release-tars/${{ matrix.assets }}-${{ matrix.platform }}.${{ matrix.extension}}
-        asset_name: ${{ matrix.assets }}-${{ matrix.platform }}.${{ matrix.extension }}
+        asset_path: ./_output/release-tars/etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
+        asset_name: etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_content_type: application/tar+gzip
+
