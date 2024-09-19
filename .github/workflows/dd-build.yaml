@@ -18,13 +18,12 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set relase version environment variable
-      run: echo RELEASE_VERSION=${GITHUB_REF#*} >> $GITHUB_ENV
+      run: echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
       env:
         GITHUB_REF: ${{ github.ref }}
     - name: Build etcd
-      run: GOOS=linux REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${VERSION}
+      run: GOOS=linux REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
       env:
-        VERSION: ${{ env.RELEASE_VERSION }}
         GITHUB_REPOSITORY: ${{ github.repository }}
     - name: Calculate checksums
       id: calculate_checksums
