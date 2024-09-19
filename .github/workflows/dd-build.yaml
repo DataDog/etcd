@@ -26,21 +26,9 @@ jobs:
       env:
         KUBE_BUILD_PLATFORM: ${{ matrix.platform }}
     - name: Build etcd
-      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
+      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/release --no-upload --no-docker-push --in-place ${{ env.RELEASE_VERSION }}
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
-    - name: Calculate checksums
-      id: calculate_checksums
-      shell: bash
-      working-directory: release/
-      env:
-        ETCD_BUILD_PLATFORM: ${{ matrix.platform }}
-      run: |
-        TARGET_PLATFORM="${ETCD_BUILD_PLATFORM/\//-}"
-        for TARGET_FILE in *"${TARGET_PLATFORM}".tar.gz
-        do
-          sha256sum "$TARGET_FILE" > "${TARGET_FILE}.sha256sum"
-        done
     - uses: actions/upload-artifact@v4
       with:
         name: etcd_output_${{ env.SANITIZED_TARGET_PLATFORM }}
@@ -122,4 +110,14 @@ jobs:
         asset_path: ./_output/release-tars/etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_name: etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_content_type: application/tar+gzip
+    - name: Upload SHA256Sums
+      id: upload-sha256sums
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.release.outputs.upload_url }}
+        asset_path: ./_output/release-tars/etcd_output_checksums
+        asset_name: etcd_output_checksums
+        asset_content_type: text/plain
 
