@@ -22,9 +22,10 @@ jobs:
       env:
         GITHUB_REF: ${{ github.ref }}
     - name: Build etcd
-      run: GOOS=linux ./scripts/build-binary ${VERSION}
+      run: GOOS=linux REPOSITORY=git@github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${VERSION}
       env:
         VERSION: ${{ env.RELEASE_VERSION }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
     - name: Calculate checksums
       id: calculate_checksums
       shell: bash
