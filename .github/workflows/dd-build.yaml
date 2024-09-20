@@ -92,21 +92,6 @@ jobs:
         release_name: ${{ steps.extract_tags.outputs.tags }}
         draft: false
         prerelease: false
-    - uses: actions/download-artifact@v4
-      with:
-        name: etcd_output_checksums
-        path: _output/checksums
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload checksums
-      id: upload-checksums
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: ./_output/checksums/SHA256SUMS
-        asset_name: SHA256SUMS
-        asset_content_type: text/plain
   releaseassetsarm:
     runs-on: ubuntu-latest
     needs: release
@@ -137,3 +122,22 @@ jobs:
         asset_path: ./_output/release-tars/etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_name: etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_content_type: application/tar+gzip
+  addchecksum:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: etcd_output_checksums
+        path: _output/checksums
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload checksums
+      id: upload-checksums
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.release.outputs.upload_url }}
+        asset_path: ./_output/checksums/SHA256SUMS
+        asset_name: SHA256SUMS
+        asset_content_type: text/plain
