@@ -28,7 +28,7 @@ jobs:
       env:
         KUBE_BUILD_PLATFORM: ${{ matrix.platform }}
     - name: Build etcd
-      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/release.sh --no-upload --no-docker-push ${{ env.RELEASE_VERSION_NO_V }} --in-place
+      run: DRY_RUN=true REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/release.sh --no-upload --no-docker-push ${{ env.RELEASE_VERSION_NO_V }} --in-place
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
     - uses: actions/upload-artifact@v4
