@@ -18,9 +18,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set release version environment variable
-      run: |
-        echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
-        echo RELEASE_VERSION_NO_V=${GITHUB_REF#refs/tags/v} >> $GITHUB_ENV
+      run: echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
       env:
         GITHUB_REF: ${{ github.ref }}
     - name: Set target platform environment variable
@@ -28,9 +26,16 @@ jobs:
       env:
         KUBE_BUILD_PLATFORM: ${{ matrix.platform }}
     - name: Build etcd
-      run: DRY_RUN=true REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/release.sh --no-upload --no-docker-push ${{ env.RELEASE_VERSION_NO_V }}
+      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
+    - name: Calculate checksums
+      id: calculate_checksums
+      shell: bash
+      working-directory: release/
+      env:
+        ETCD_BUILD_PLATFORM: ${{ matrix.platform }}
+      run: ls . | grep -E '\.tar.gz$|\.zip$' | xargs shasum -a 256 > ./SHA256SUMS
     - uses: actions/upload-artifact@v4
       with:
         name: etcd_output_${{ env.SANITIZED_TARGET_PLATFORM }}
@@ -92,7 +97,7 @@ jobs:
     strategy:
       matrix:
         platform: ["linux-arm64","linux-amd64"]
-        extension: ["tar.gz", "tar.gz.sha256sum"]
+        extension: ["tar.gz"]
     steps:
     - uses: actions/download-artifact@v4
       with:
@@ -102,7 +107,7 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         name: etcd_output_checksums
-        path: _output/release-tars
+        path: _output/checksums
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set release version environment variable
       run: echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
@@ -121,14 +126,13 @@ jobs:
         asset_path: ./_output/release-tars/etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_name: etcd-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}.${{ matrix.extension }}
         asset_content_type: application/tar+gzip
-    - name: Upload SHA256 checksums
-      id: upload-sha256sums
+    - name: Upload checksums
+      id: upload-checksums
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: ./_output/release-tars/etcd_output_checksums
-        asset_name: etcd_output_checksums
+        asset_path: ./_output/checksums/SHA256SUMS
+        asset_name: SHA256SUMS
         asset_content_type: text/plain
-
