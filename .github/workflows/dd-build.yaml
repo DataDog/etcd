@@ -42,17 +42,9 @@ jobs:
         SANITIZED_TARGET_PLATFORM: ${{ env.SANITIZED_TARGET_PLATFORM }}
     - uses: actions/upload-artifact@v4
       with:
-        name: etcd_output_checksums_${{ env.SANITIZED_TARGET_PLATFORM }}
-        path: release/SHA256SUMS
-      env:
-        SANITIZED_TARGET_PLATFORM: ${{ env.SANITIZED_TARGET_PLATFORM }}
-    - name: Merge checksums
-      uses: actions/upload-artifact/merge@v4
-      if: always()
-      with:
         name: etcd_output_checksums
-        pattern: etcd_output_checksums_*
-        delete-merged: true
+        path: release/SHA256SUMS
+        overwrite: true
   release:
     permissions:
       contents: write
