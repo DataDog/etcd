@@ -10,9 +10,6 @@ permissions: write-all
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: ["linux/arm64","linux/amd64"]
     steps:
     - uses: actions/checkout@v4
       with:
@@ -21,10 +18,6 @@ jobs:
       run: echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
       env:
         GITHUB_REF: ${{ github.ref }}
-    - name: Set target platform environment variable
-      run: echo SANITIZED_TARGET_PLATFORM=${KUBE_BUILD_PLATFORM/\//-} >> $GITHUB_ENV
-      env:
-        KUBE_BUILD_PLATFORM: ${{ matrix.platform }}
     - name: Build etcd
       run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
       env:
@@ -36,15 +29,8 @@ jobs:
       run: ls . | grep -E '\.tar.gz$|\.zip$' | xargs shasum -a 256 > ./SHA256SUMS
     - uses: actions/upload-artifact@v4
       with:
-        name: etcd_output_${{ env.SANITIZED_TARGET_PLATFORM }}
-        path: release/etcd-${{ env.RELEASE_VERSION }}-${{ env.SANITIZED_TARGET_PLATFORM }}*
-      env:
-        SANITIZED_TARGET_PLATFORM: ${{ env.SANITIZED_TARGET_PLATFORM }}
-    - uses: actions/upload-artifact@v4
-      with:
-        name: etcd_output_checksums
-        path: release/SHA256SUMS
-        overwrite: true
+        name: etcd_output
+        path: release/
   release:
     permissions:
       contents: write
@@ -102,7 +88,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: etcd_output_${{ matrix.platform }}
+        name: etcd_output
         path: _output/release-tars
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set release version environment variable
