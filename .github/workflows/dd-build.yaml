@@ -114,7 +114,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: etcd_output_checksums
+        name: etcd_output
         path: _output/checksums
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload checksums
