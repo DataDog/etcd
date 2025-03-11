@@ -19,7 +19,7 @@ jobs:
       env:
         GITHUB_REF: ${{ github.ref }}
     - name: Build etcd
-      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
+      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git CGO_ENABLED=1 GOEXPERIMENT=boringcrypto ./scripts/build-binary ${{ env.RELEASE_VERSION }}
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
     - name: Calculate checksums
