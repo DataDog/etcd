@@ -20,7 +20,10 @@ CGO_ENABLED="${CGO_ENABLED:-0}"
 # Set GO_LDFLAGS="-s" for building without symbols for debugging.
 # shellcheck disable=SC2206
 GO_LDFLAGS=(${GO_LDFLAGS:-} "-X=${VERSION_SYMBOL}=${GIT_SHA}")
-GO_BUILD_ENV=("CGO_ENABLED=${CGO_ENABLED}" "GO_BUILD_FLAGS=${GO_BUILD_FLAGS:-}" "GOOS=${GOOS}" "GOARCH=${GOARCH}")
+# shellcheck disable=SC2206
+GO_ADDITIONAL_VARS="${GO_ADDITIONAL_VARS:-}"
+IFS=' ' read -r -a GO_ADDITIONAL_VARS_ARR <<< "${GO_ADDITIONAL_VARS}"
+GO_BUILD_ENV=("CGO_ENABLED=${CGO_ENABLED}" "${GO_ADDITIONAL_VARS_ARR[@]}" "GO_BUILD_FLAGS=${GO_BUILD_FLAGS:-}" "GOOS=${GOOS}" "GOARCH=${GOARCH}")
 
 GOFAIL_VERSION=$(cd tools/mod && go list -m -f '{{.Version}}' go.etcd.io/gofail)
 # enable/disable failpoints
