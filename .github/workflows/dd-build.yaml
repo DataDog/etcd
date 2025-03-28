@@ -8,18 +8,32 @@ on:
     - "*-dd*"
 permissions: write-all
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-amd64:
+    strategy:
+      matrix:
+        platform: ["linux/amd64"]
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       with:
         fetch-depth: 0
-    - name: Set release version environment variable
-      run: echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
+    - name: Set environment variables
+      id: set_env
+      run: |
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "TARGET_OS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)" >> $GITHUB_ENV
+        echo "TARGET_ARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)" >> $GITHUB_ENV
       env:
         GITHUB_REF: ${{ github.ref }}
     - name: Build etcd
-      run: REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY}}.git ./scripts/build-binary ${{ env.RELEASE_VERSION }}
+      run: |
+        REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY }}.git \
+        CGO_ENABLED=1 \
+        GOEXPERIMENT=boringcrypto \
+        GO_BUILD_FLAGS="-tags=fips" \
+        TARGET_OS=${TARGET_OS} \
+        TARGET_ARCH=${TARGET_ARCH} \
+        ./scripts/build-binary-single-target ${{ env.RELEASE_VERSION }}
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
     - name: Calculate checksums
@@ -27,15 +41,52 @@ jobs:
       shell: bash
       working-directory: release/
       run: ls . | grep -E '\.tar.gz$|\.zip$' | xargs shasum -a 256 > ./SHA256SUMS
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
-        name: etcd_output
+        name: etcd_output_amd64
+        path: release/
+  build-arm64:
+    strategy:
+      matrix:
+        platform: ["linux/arm64"]
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      with:
+        fetch-depth: 0
+    - name: Set environment variables
+      id: set_env
+      run: |
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "TARGET_OS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)" >> $GITHUB_ENV
+        echo "TARGET_ARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)" >> $GITHUB_ENV
+      env:
+        GITHUB_REF: ${{ github.ref }}
+    - name: Build etcd
+      run: |
+        REPOSITORY=https://github.com/${{ env.GITHUB_REPOSITORY }}.git \
+        CGO_ENABLED=1 \
+        GOEXPERIMENT=boringcrypto \
+        GO_BUILD_FLAGS="-tags=fips" \
+        TARGET_OS=${TARGET_OS} \
+        TARGET_ARCH=${TARGET_ARCH} \
+        ./scripts/build-binary-single-target ${{ env.RELEASE_VERSION }}
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+    - name: Calculate checksums
+      id: calculate_checksums
+      shell: bash
+      working-directory: release/
+      run: ls . | grep -E '\.tar.gz$|\.zip$' | xargs shasum -a 256 > ./SHA256SUMS
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      with:
+        name: etcd_output_arm64
         path: release/
   release:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build-amd64, build-arm64]
     outputs:
       upload_url: ${{ steps.create_release_branch.outputs.upload_url }}${{ steps.create_release_tags.outputs.upload_url }}
     steps:
@@ -48,7 +99,7 @@ jobs:
       if: startsWith(github.ref, 'refs/heads/')
     - name: Create Release for Branch
       id: create_release_branch
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
       if: startsWith(github.ref, 'refs/heads/')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,7 +118,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
     - name: Create Release for Tags
       id: create_release_tags
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
       if: ${{ startsWith(github.ref, 'refs/tags/') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,7 +129,7 @@ jobs:
         release_name: ${{ steps.extract_tags.outputs.tags }}
         draft: false
         prerelease: false
-  releaseassetsarm:
+  releaseassets:
     runs-on: ubuntu-latest
     needs: release
     strategy:
@@ -86,18 +137,24 @@ jobs:
         platform: ["linux-arm64","linux-amd64"]
         extension: ["tar.gz"]
     steps:
-    - uses: actions/download-artifact@v4
+    - name: Set artifact name
+      id: set_artifact
+      run: |
+        if [[ "${{ matrix.platform }}" == *"arm64"* ]]; then
+          echo "ARTIFACT_NAME=etcd_output_arm64" >> $GITHUB_ENV
+        else
+          echo "ARTIFACT_NAME=etcd_output_amd64" >> $GITHUB_ENV
+        fi
+    - name: Download artifacts
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
       with:
-        name: etcd_output
+        name: ${{ env.ARTIFACT_NAME }}
         path: _output/release-tars
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set release version environment variable
       run: echo RELEASE_VERSION=${GITHUB_REF#refs/tags/} >> $GITHUB_ENV
       env:
         GITHUB_REF: ${{ github.ref }}
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: _output
     - name: Upload Release Asset
       id: upload-release-asset
       uses: actions/upload-release-asset@v1
@@ -112,11 +169,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     steps:
-    - uses: actions/download-artifact@v4
+    - name: Create output directory
+      run: mkdir -p _output/checksums
+    - name: Download all artifacts
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
       with:
-        name: etcd_output
-        path: _output/checksums
+        path: _output/artifacts
         github-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Combine checksums
+      run: |
+        find _output/artifacts -name "SHA256SUMS" -exec cat {} \; > _output/checksums/SHA256SUMS
     - name: Upload checksums
       id: upload-checksums
       uses: actions/upload-release-asset@v1
