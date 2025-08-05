@@ -60,12 +60,13 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 			if lastErr == nil {
 				return nil
 			}
-			c.GetLogger().Warn(
-				"retrying of unary invoker failed",
-				zap.String("target", cc.Target()),
-				zap.Uint("attempt", attempt),
-				zap.Error(lastErr),
-			)
+			//c.GetLogger().Info(
+			//	"retrying of unary invoker failed",
+			//	zap.String("target", cc.Target()),
+			//	zap.String("method", method),
+			//	zap.Uint("attempt", attempt),
+			//	zap.Error(lastErr),
+			//)
 			if isContextError(lastErr) {
 				if ctx.Err() != nil {
 					// its the context deadline or cancellation.
@@ -392,7 +393,7 @@ func withMax(maxRetries uint) retryOption {
 	}}
 }
 
-// WithBackoff sets the `BackoffFunc `used to control time between retries.
+// WithBackoff sets the `BackoffFunc` used to control time between retries.
 func withBackoff(bf backoffFunc) retryOption {
 	return retryOption{applyFunc: func(o *options) {
 		o.backoffFunc = bf
