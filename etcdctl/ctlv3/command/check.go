@@ -250,10 +250,12 @@ func newCheckPerfCommand(cmd *cobra.Command, args []string) {
 	}()
 
 	sc := r.Stats()
+	rc := r.Run()
 	wg.Wait()
 	close(r.Results())
 
 	s := <-sc
+	report := <-rc
 
 	attemptCleanup(clients[0], autoCompact)
 
@@ -262,6 +264,8 @@ func newCheckPerfCommand(cmd *cobra.Command, args []string) {
 			defrag(clients[0], ep)
 		}
 	}
+
+	fmt.Printf("\nDetailed benchmark report:\n%s", report)
 
 	ok = true
 	if len(s.ErrorDist) != 0 {
