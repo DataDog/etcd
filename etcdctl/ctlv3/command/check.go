@@ -57,10 +57,30 @@ var checkPerfCfgMap = map[string]checkPerfCfg{
 		clients:  50,
 		duration: 60,
 	},
+	"sl": {
+		limit:    150,
+		clients:  50,
+		duration: 300,
+	},
 	"m": {
 		limit:    1000,
 		clients:  200,
 		duration: 60,
+	},
+	"ml": {
+		limit:    1000,
+		clients:  200,
+		duration: 300,
+	},
+	"msl": {
+		limit:    4000,
+		clients:  300,
+		duration: 300,
+	},
+	"mxl": {
+		limit:    4000,
+		clients:  600,
+		duration: 300,
 	},
 	"l": {
 		limit:    8000,
@@ -71,6 +91,16 @@ var checkPerfCfgMap = map[string]checkPerfCfg{
 		limit:    15000,
 		clients:  1000,
 		duration: 60,
+	},
+	"xll": {
+		limit:    20000,
+		clients:  300,
+		duration: 300,
+	},
+	"xlll": {
+		limit:    14000,
+		clients:  300,
+		duration: 180,
 	},
 }
 
@@ -138,9 +168,15 @@ func NewCheckPerfCommand() *cobra.Command {
 func newCheckPerfCommand(cmd *cobra.Command, args []string) {
 	var checkPerfAlias = map[string]string{
 		"s": "s", "small": "s",
+		"sl": "sl", "small-long": "sl",
 		"m": "m", "medium": "m",
+		"ml": "ml", "mediumlong": "ml",
+		"msl": "msl", "mediumpluslong": "msl",
+		"mxl": "mxl", "mediumxlarge": "mxl",
 		"l": "l", "large": "l",
 		"xl": "xl", "xLarge": "xl",
+		"xll":  "xll",
+		"xlll": "xlll",
 	}
 
 	model, ok := checkPerfAlias[checkPerfLoad]
