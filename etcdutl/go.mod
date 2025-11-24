@@ -27,12 +27,12 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.1.3
 	go.etcd.io/bbolt v1.3.12
-	go.etcd.io/etcd/api/v3 v3.5.25
-	go.etcd.io/etcd/client/pkg/v3 v3.5.25
-	go.etcd.io/etcd/client/v3 v3.5.25
-	go.etcd.io/etcd/pkg/v3 v3.5.25
-	go.etcd.io/etcd/raft/v3 v3.5.25
-	go.etcd.io/etcd/server/v3 v3.5.25
+	go.etcd.io/etcd/api/v3 v3.5.25-dd.1
+	go.etcd.io/etcd/client/pkg/v3 v3.5.25-dd.1
+	go.etcd.io/etcd/client/v3 v3.5.25-dd.1
+	go.etcd.io/etcd/pkg/v3 v3.5.25-dd.1
+	go.etcd.io/etcd/raft/v3 v3.5.25-dd.1
+	go.etcd.io/etcd/server/v3 v3.5.25-dd.1
 	go.uber.org/zap v1.17.0
 )
 
