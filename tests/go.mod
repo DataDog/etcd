@@ -16,15 +16,15 @@ replace (
 )
 
 require (
-	github.com/anishathalye/porcupine v1.0.2
-	github.com/antithesishq/antithesis-sdk-go v0.4.3
+	github.com/anishathalye/porcupine v1.0.3
+	github.com/antithesishq/antithesis-sdk-go v0.4.4
 	github.com/coreos/go-semver v0.3.1
-	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.7.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.5
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.7
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2
@@ -32,16 +32,16 @@ require (
 	github.com/soheilhy/cmux v0.1.5
 	github.com/stretchr/testify v1.11.1
 	go.etcd.io/bbolt v1.4.3
-	go.etcd.io/etcd/api/v3 v3.6.0-alpha.0
+	go.etcd.io/etcd/api/v3 v3.6.7
 	go.etcd.io/etcd/cache/v3 v3.6.1
-	go.etcd.io/etcd/client/pkg/v3 v3.6.0-alpha.0
-	go.etcd.io/etcd/client/v3 v3.6.0-alpha.0
-	go.etcd.io/etcd/etcdctl/v3 v3.6.0-alpha.0
-	go.etcd.io/etcd/etcdutl/v3 v3.6.0-alpha.0
-	go.etcd.io/etcd/pkg/v3 v3.6.0-alpha.0
-	go.etcd.io/etcd/server/v3 v3.6.0-alpha.0
+	go.etcd.io/etcd/client/pkg/v3 v3.6.7
+	go.etcd.io/etcd/client/v3 v3.6.7
+	go.etcd.io/etcd/etcdctl/v3 v3.6.7
+	go.etcd.io/etcd/etcdutl/v3 v3.6.7
+	go.etcd.io/etcd/pkg/v3 v3.6.7
+	go.etcd.io/etcd/server/v3 v3.6.7
 	go.etcd.io/gofail v0.2.0
-	go.etcd.io/raft/v3 v3.6.0-beta.0.0.20260116184858-6d944ca211ee
+	go.etcd.io/raft/v3 v3.6.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
@@ -102,8 +102,8 @@ require (
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260120221211-b8f7ae30c516 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260120221211-b8f7ae30c516 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/utils v0.0.0-20260108192941-914a6e750570 // indirect
