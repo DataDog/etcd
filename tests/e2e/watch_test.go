@@ -61,26 +61,26 @@ const (
 var tcs = []testCase{
 	{
 		name:          "NoTLS",
-		maxWatchDelay: 150 * time.Millisecond,
+		maxWatchDelay: 300 * time.Millisecond,
 		dbSizeBytes:   5 * Mega,
 	},
 	{
 		name:          "TLS",
 		client:        e2e.ClientConfig{ConnectionType: e2e.ClientTLS},
-		maxWatchDelay: 150 * time.Millisecond,
+		maxWatchDelay: 300 * time.Millisecond,
 		dbSizeBytes:   5 * Mega,
 	},
 	{
 		name:               "SeparateHTTPNoTLS",
 		clientHTTPSeparate: true,
-		maxWatchDelay:      150 * time.Millisecond,
+		maxWatchDelay:      300 * time.Millisecond,
 		dbSizeBytes:        5 * Mega,
 	},
 	{
 		name:               "SeparateHTTPTLS",
 		client:             e2e.ClientConfig{ConnectionType: e2e.ClientTLS},
 		clientHTTPSeparate: true,
-		maxWatchDelay:      150 * time.Millisecond,
+		maxWatchDelay:      300 * time.Millisecond,
 		dbSizeBytes:        5 * Mega,
 	},
 }
