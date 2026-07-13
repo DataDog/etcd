@@ -241,6 +241,7 @@ func newConfig() *config {
 	fs.StringVar(&cfg.ec.ClientTLSInfo.CRLFile, "client-crl-file", "", "Path to the client certificate revocation list file.")
 	fs.Var(flags.NewStringsValue(""), "client-cert-allowed-hostname", "Comma-separated list of allowed SAN hostnames for client cert authentication.")
 	fs.Var(flags.NewStringsValue(""), "client-cert-allowed-uri", "Comma-separated list of allowed SAN URIs for client cert authentication.")
+	fs.Var(flags.NewStringsValue(""), "client-cert-allowed-uri-pattern", "Comma-separated list of allowed SAN URI patterns for client cert authentication (path.Match syntax).")
 	fs.StringVar(&cfg.ec.ClientTLSInfo.TrustedCAFile, "trusted-ca-file", "", "Path to the client server TLS trusted CA cert file.")
 	fs.BoolVar(&cfg.ec.ClientAutoTLS, "auto-tls", false, "Client TLS using generated certificates")
 	fs.StringVar(&cfg.ec.PeerTLSInfo.CertFile, "peer-cert-file", "", "Path to the peer server TLS cert file.")
@@ -255,6 +256,7 @@ func newConfig() *config {
 	fs.Var(flags.NewStringsValue(""), "peer-cert-allowed-cn", "Comma-separated list of allowed CNs for inter-peer TLS authentication.")
 	fs.Var(flags.NewStringsValue(""), "peer-cert-allowed-hostname", "Comma-separated list of allowed SAN hostnames for inter-peer TLS authentication.")
 	fs.Var(flags.NewStringsValue(""), "peer-cert-allowed-uri", "Comma-separated list of allowed SAN URIs for inter-peer TLS authentication.")
+	fs.Var(flags.NewStringsValue(""), "peer-cert-allowed-uri-pattern", "Comma-separated list of allowed SAN URI patterns for inter-peer TLS authentication (path.Match syntax).")
 	fs.Var(flags.NewStringsValue(""), "cipher-suites", "Comma-separated list of supported TLS cipher suites between client/server and peers (empty will be auto-populated by Go).")
 	fs.BoolVar(&cfg.ec.PeerTLSInfo.SkipClientSANVerify, "experimental-peer-skip-client-san-verification", false, "Skip verification of SAN field in client certificate for peer connections.")
 	fs.StringVar(&cfg.ec.TlsMinVersion, "tls-min-version", string(tlsutil.TLSVersion12), "Minimum TLS version supported by etcd. Possible values: TLS1.2, TLS1.3.")
@@ -441,9 +443,11 @@ func (cfg *config) configFromCmdLine() error {
 
 	cfg.ec.ClientTLSInfo.AllowedHostnames = flags.StringsFromFlag(cfg.cf.flagSet, "client-cert-allowed-hostname")
 	cfg.ec.ClientTLSInfo.AllowedURIs = flags.StringsFromFlag(cfg.cf.flagSet, "client-cert-allowed-uri")
+	cfg.ec.ClientTLSInfo.AllowedURIPatterns = flags.StringsFromFlag(cfg.cf.flagSet, "client-cert-allowed-uri-pattern")
 	cfg.ec.PeerTLSInfo.AllowedCNs = flags.StringsFromFlag(cfg.cf.flagSet, "peer-cert-allowed-cn")
 	cfg.ec.PeerTLSInfo.AllowedHostnames = flags.StringsFromFlag(cfg.cf.flagSet, "peer-cert-allowed-hostname")
 	cfg.ec.PeerTLSInfo.AllowedURIs = flags.StringsFromFlag(cfg.cf.flagSet, "peer-cert-allowed-uri")
+	cfg.ec.PeerTLSInfo.AllowedURIPatterns = flags.StringsFromFlag(cfg.cf.flagSet, "peer-cert-allowed-uri-pattern")
 
 	cfg.ec.CipherSuites = flags.StringsFromFlag(cfg.cf.flagSet, "cipher-suites")
 

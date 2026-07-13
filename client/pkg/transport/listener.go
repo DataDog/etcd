@@ -28,6 +28,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -197,9 +198,13 @@ type TLSInfo struct {
 	// TLS certificate provided by a client.
 	AllowedHostnames []string
 
-	// AllowedURIs is a list of acceptable subjective alternative name URIs that must match the
+	// AllowedURIs is a list of acceptable subject alternative name URIs that must match the
 	// TLS certificate provided by a client.
 	AllowedURIs []string
+
+	// AllowedURIPatterns is a list of acceptable subject alternative name URI patterns that must
+	// match the TLS certificate provided by a client. Patterns use path.Match syntax.
+	AllowedURIPatterns []string
 
 	// Logger logs TLS errors.
 	// If nil, all logs are discarded.
@@ -420,7 +425,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 	}
 
 	var definedRestrictions int
-	for _, restriction := range []int{len(info.AllowedCN), len(info.AllowedCNs), len(info.AllowedHostname), len(info.AllowedHostnames), len(info.AllowedURIs)} {
+	for _, restriction := range []int{len(info.AllowedCN), len(info.AllowedCNs), len(info.AllowedHostname), len(info.AllowedHostnames), len(info.AllowedURIs) + len(info.AllowedURIPatterns)} {
 		if restriction > 0 {
 			definedRestrictions++
 			if definedRestrictions > 1 {
@@ -467,11 +472,21 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 			return false
 		}
 	}
-	if len(info.AllowedURIs) > 0 {
+	if len(info.AllowedURIs) > 0 || len(info.AllowedURIPatterns) > 0 {
+		for _, allowedURIPattern := range info.AllowedURIPatterns {
+			if _, err := path.Match(allowedURIPattern, ""); err != nil {
+				return nil, fmt.Errorf("invalid allowed URI pattern %q: %w", allowedURIPattern, err)
+			}
+		}
 		verifyCertificate = func(cert *x509.Certificate) bool {
-			for _, allowedURI := range info.AllowedURIs {
-				for _, uri := range cert.URIs {
+			for _, uri := range cert.URIs {
+				for _, allowedURI := range info.AllowedURIs {
 					if allowedURI == uri.String() {
+						return true
+					}
+				}
+				for _, allowedURIPattern := range info.AllowedURIPatterns {
+					if matches, _ := path.Match(allowedURIPattern, uri.String()); matches {
 						return true
 					}
 				}

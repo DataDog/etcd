@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -479,6 +480,81 @@ func TestTLSInfoParseFuncError(t *testing.T) {
 		if _, err = tt.info.ClientConfig(); err == nil {
 			t.Errorf("#%d: expected non-nil error from ClientConfig()", i)
 		}
+	}
+}
+
+func TestTLSInfoAllowedURIPatterns(t *testing.T) {
+	tlsinfo, del, err := createSelfCert()
+	if err != nil {
+		t.Fatalf("unable to create cert: %v", err)
+	}
+	defer del()
+
+	tests := []struct {
+		name               string
+		allowedURIs        []string
+		allowedURIPatterns []string
+		clientURI          string
+		wantMatch          bool
+	}{
+		{
+			name:        "exact match remains supported",
+			allowedURIs: []string{"spiffe://staging/kubernetes/service-discovery/xds-control-plane"},
+			clientURI:   "spiffe://staging/kubernetes/service-discovery/xds-control-plane",
+			wantMatch:   true,
+		},
+		{
+			name:               "namespace wildcard",
+			allowedURIPatterns: []string{"spiffe://staging/kubernetes/devenv-edge-*/xds-control-plane"},
+			clientURI:          "spiffe://staging/kubernetes/devenv-edge-javed/xds-control-plane",
+			wantMatch:          true,
+		},
+		{
+			name:               "wildcard does not admit another service account",
+			allowedURIPatterns: []string{"spiffe://staging/kubernetes/devenv-edge-*/xds-control-plane"},
+			clientURI:          "spiffe://staging/kubernetes/devenv-edge-javed/default",
+			wantMatch:          false,
+		},
+		{
+			name:               "wildcard does not admit another namespace prefix",
+			allowedURIPatterns: []string{"spiffe://staging/kubernetes/devenv-edge-*/xds-control-plane"},
+			clientURI:          "spiffe://staging/kubernetes/devenv-smartedge-javed/xds-control-plane",
+			wantMatch:          false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info := *tlsinfo
+			info.AllowedURIs = tt.allowedURIs
+			info.AllowedURIPatterns = tt.allowedURIPatterns
+			cfg, err := info.ServerConfig()
+			if err != nil {
+				t.Fatalf("ServerConfig() returned an error: %v", err)
+			}
+
+			clientURI, err := url.Parse(tt.clientURI)
+			if err != nil {
+				t.Fatalf("failed to parse client URI: %v", err)
+			}
+			err = cfg.VerifyPeerCertificate(nil, [][]*x509.Certificate{{{URIs: []*url.URL{clientURI}}}})
+			if gotMatch := err == nil; gotMatch != tt.wantMatch {
+				t.Errorf("URI match = %t, want %t (error: %v)", gotMatch, tt.wantMatch, err)
+			}
+		})
+	}
+}
+
+func TestTLSInfoRejectsInvalidAllowedURIPattern(t *testing.T) {
+	tlsinfo, del, err := createSelfCert()
+	if err != nil {
+		t.Fatalf("unable to create cert: %v", err)
+	}
+	defer del()
+
+	tlsinfo.AllowedURIPatterns = []string{"["}
+	if _, err := tlsinfo.ServerConfig(); err == nil {
+		t.Fatal("ServerConfig() accepted an invalid URI pattern")
 	}
 }
 

@@ -162,6 +162,8 @@ Security:
     Comma-separated list of SAN hostnames for client cert authentication.
   --client-cert-allowed-uri ''
     Comma-separated list of allowed SAN URIs for client cert authentication.
+  --client-cert-allowed-uri-pattern ''
+    Comma-separated list of allowed SAN URI patterns for client cert authentication (path.Match syntax).
   --trusted-ca-file ''
     Path to the client server TLS trusted CA cert file.
   --auto-tls 'false'
@@ -180,6 +182,8 @@ Security:
     Comma-separated list of allowed SAN hostnames for inter-peer TLS authentication.
   --peer-cert-allowed-uri ''
     Comma-separated list of allowed SAN URIs for inter-peer TLS authentication.
+  --peer-cert-allowed-uri-pattern ''
+    Comma-separated list of allowed SAN URI patterns for inter-peer TLS authentication (path.Match syntax).
   --peer-auto-tls 'false'
     Peer TLS using self-generated certificates if --peer-key-file and --peer-cert-file are not provided.
   --peer-client-cert-file ''
