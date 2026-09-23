@@ -21,6 +21,13 @@ GOEXPERIMENT="${GOEXPERIMENT:-}"
 # Set GO_LDFLAGS="-s" for building without symbols for debugging.
 # shellcheck disable=SC2206
 GO_LDFLAGS=(${GO_LDFLAGS:-} "-X=${VERSION_SYMBOL}=${GIT_SHA}")
+
+# Stamp the Datadog release version from the tag, so the binary reports
+# e.g. 3.5.31-dd.1 rather than the plain upstream version.
+if [ -n "${ETCD_VERSION_OVERRIDE:-}" ]; then
+  GO_LDFLAGS+=("-X=${ROOT_MODULE}/api/v3/version.Version=${ETCD_VERSION_OVERRIDE#v}")
+fi
+
 GO_BUILD_ENV=("CGO_ENABLED=${CGO_ENABLED}" "GO_BUILD_FLAGS=${GO_BUILD_FLAGS:-}" "GOOS=${GOOS}" "GOARCH=${GOARCH}" "GOEXPERIMENT=${GOEXPERIMENT}")
 
 GOFAIL_VERSION=$(cd tools/mod && go list -m -f '{{.Version}}' go.etcd.io/gofail)
